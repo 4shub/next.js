@@ -893,6 +893,7 @@ async function getRSCPayload(
       />
       <ViewportTree key={ctx.requestId} />
       <StaticMetadata />
+      {StreamingMetadata ? <StreamingMetadata /> : null}
     </React.Fragment>
   )
 
