@@ -333,30 +333,6 @@ function createNotFoundLoaderTree(loaderTree: LoaderTree): LoaderTree {
   ]
 }
 
-function createDivergedMetadataComponents(
-  Metadata: React.ComponentType,
-  serveStreamingMetadata: boolean
-): {
-  StaticMetadata: React.ComponentType<{}>
-  StreamingMetadata: React.ComponentType<{}> | null
-} {
-  function EmptyMetadata() {
-    return null
-  }
-  const StreamingMetadata: React.ComponentType | null = serveStreamingMetadata
-    ? Metadata
-    : null
-
-  const StaticMetadata: React.ComponentType<{}> = serveStreamingMetadata
-    ? EmptyMetadata
-    : Metadata
-
-  return {
-    StaticMetadata,
-    StreamingMetadata,
-  }
-}
-
 /**
  * Returns a function that parses the dynamic segment and return the associated value.
  */
@@ -523,13 +499,12 @@ async function generateDynamicRSCPayload(
       serveStreamingMetadata,
     })
 
-    const { StreamingMetadata, StaticMetadata } =
-      createDivergedMetadataComponents(() => {
-        return (
-          // Adding requestId as react key to make metadata remount for each render
-          <MetadataTree key={requestId} />
-        )
-      }, serveStreamingMetadata)
+    // const { StreamingMetadata, StaticMetadata } =
+    //   createRootMetadata(() => {
+    //     return (
+
+    //     )
+    //   }, serveStreamingMetadata)
 
     flightData = (
       await walkTreeWithFlightRouterState({
@@ -548,8 +523,8 @@ async function generateDynamicRSCPayload(
             />
             {/* Adding requestId as react key to make metadata remount for each render */}
             <ViewportTree key={requestId} />
-            {StreamingMetadata ? <StreamingMetadata /> : null}
-            <StaticMetadata />
+            {/* Adding requestId as react key to make metadata remount for each render */}
+            <MetadataTree key={requestId} />
           </React.Fragment>
         ),
         injectedCSS: new Set(),
@@ -852,14 +827,6 @@ async function getRSCPayload(
 
   const preloadCallbacks: PreloadCallbacks = []
 
-  const { StreamingMetadata, StaticMetadata } =
-    createDivergedMetadataComponents(() => {
-      return (
-        // Not add requestId as react key to ensure segment prefetch could result consistently if nothing changed
-        <MetadataTree />
-      )
-    }, serveStreamingMetadata)
-
   const seedData = await createComponentTree({
     ctx,
     loaderTree: tree,
@@ -873,7 +840,6 @@ async function getRSCPayload(
     missingSlots,
     preloadCallbacks,
     authInterrupts: ctx.renderOpts.experimental.authInterrupts,
-    StreamingMetadata,
     StreamingMetadataOutlet,
   })
 
@@ -892,8 +858,8 @@ async function getRSCPayload(
         isAction={ctx.isAction}
       />
       <ViewportTree key={ctx.requestId} />
-      <StaticMetadata />
-      {StreamingMetadata ? <StreamingMetadata /> : null}
+      {/* Not add requestId as react key to ensure segment prefetch could result consistently if nothing changed */}
+      <MetadataTree />
     </React.Fragment>
   )
 
@@ -980,16 +946,12 @@ async function getErrorRSCPayload(
     serveStreamingMetadata: serveStreamingMetadata,
   })
 
-  const { StreamingMetadata, StaticMetadata } =
-    createDivergedMetadataComponents(
-      () => (
-        <React.Fragment key={flightDataPathHeadKey}>
-          {/* Adding requestId as react key to make metadata remount for each render */}
-          <MetadataTree key={requestId} />
-        </React.Fragment>
-      ),
-      serveStreamingMetadata
-    )
+  const metadata = (
+    <React.Fragment key={flightDataPathHeadKey}>
+      {/* Adding requestId as react key to make metadata remount for each render */}
+      <MetadataTree key={requestId} />
+    </React.Fragment>
+  )
 
   const initialHead = (
     <React.Fragment key={flightDataPathHeadKey}>
@@ -1003,8 +965,7 @@ async function getErrorRSCPayload(
       {process.env.NODE_ENV === 'development' && (
         <meta name="next-error" content="not-found" />
       )}
-      {StreamingMetadata ? <StreamingMetadata /> : null}
-      <StaticMetadata />
+      {metadata}
     </React.Fragment>
   )
 
@@ -1024,10 +985,7 @@ async function getErrorRSCPayload(
   const seedData: CacheNodeSeedData = [
     initialTree[0],
     <html id="__next_error__">
-      <head>
-        {StreamingMetadata ? <StreamingMetadata /> : null}
-        <StaticMetadata />
-      </head>
+      <head>{metadata}</head>
       <body>
         {process.env.NODE_ENV !== 'production' && err ? (
           <template
