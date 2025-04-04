@@ -523,8 +523,8 @@ async function generateDynamicRSCPayload(
             />
             {/* Adding requestId as react key to make metadata remount for each render */}
             <ViewportTree key={requestId} />
-            {/* Adding requestId as react key to make metadata remount for each render */}
-            <MetadataTree key={requestId} />
+            {/* Not add requestId as react key to ensure segment prefetch could result consistently if nothing changed */}
+            <MetadataTree />
           </React.Fragment>
         ),
         injectedCSS: new Set(),
