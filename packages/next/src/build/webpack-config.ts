@@ -95,6 +95,7 @@ import {
 } from './next-dir-paths'
 import { getRspackCore, getRspackReactRefresh } from '../shared/lib/get-rspack'
 import { RspackProfilingPlugin } from './webpack/plugins/rspack-profiling-plugin'
+import type { NextBuildContext } from './build-context'
 
 type ExcludesFalse = <T>(x: T | false) => x is T
 type ClientEntries = {
@@ -307,7 +308,9 @@ export default async function getBaseWebpackConfig(
     fetchCacheKeyPrefix,
     edgePreviewProps,
     isCompileMode,
+    previewProps,
   }: {
+    previewProps?: (typeof NextBuildContext)['previewProps']
     isCompileMode?: boolean
     buildId: string
     encryptionKey: string
@@ -1918,6 +1921,7 @@ export default async function getBaseWebpackConfig(
         isNodeServer,
         middlewareMatchers,
         omitNonDeterministic: isCompileMode,
+        previewModeProps: previewProps,
       }),
       isClient &&
         new ReactLoadablePlugin({
