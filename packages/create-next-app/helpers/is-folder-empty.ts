@@ -38,7 +38,7 @@ export function isFolderEmpty(root: string, name: string): boolean {
     console.log(
       `The directory ${green(name)} contains files that could conflict:`
     )
-    console.log()
+    
     for (const file of conflicts) {
       try {
         const stats = lstatSync(join(root, file))
